@@ -1,0 +1,41 @@
+version: "3.8"
+# This docker composition can be used as a quick start. Docker images will be fetch from docker hub's
+# couldnativegeoserver organization. The config-service is set up to use a public remote git repository. At start up, it'll
+# clone it to the service instance container's filesystem and serve application configurations from there.
+#
+volumes:
+  spark-tensorflow:
+
+networks:
+  spark-network:
+    driver: bridge
+
+services:
+  spark-tensorflow:
+    image: spark-tensorflow:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # depends_on:
+    #   - rabbitmq
+    environment:
+      JAVA_OPTS: -XX:MaxRAMPercentage=80 -XX:MaxRAM=1G
+    networks:
+      - spark-network
+    # restart: on-failure
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      # interval: 1m30s
+      # timeout: 10s
+      # retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    ulimits:
+      nofile:
+        soft: "8192"
+        hard: "16384"
+    # wait until config service is available
+    # command: sh -c "exec dockerize --timeout 240s -wait http://config:8080/web-ui/default -wait http://catalog:8080/actuator/health java $$JAVA_OPTS -jar /opt/app/web-ui-service.jar"
